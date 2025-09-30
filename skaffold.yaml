@@ -1,0 +1,53 @@
+apiVersion: skaffold/v4beta13
+kind: Config
+metadata:
+  name: ott
+build:
+  artifacts:
+    - image: loaded-pg
+      context: docker/postgres
+      docker:
+        dockerfile: Dockerfile
+    - image: posts-connector
+      context: connectors
+      docker:
+        dockerfile: Dockerfile
+        buildArgs:
+          CONFIG_FILE: "posts-config.yaml"
+    - image: likes-connector
+      context: connectors
+      docker:
+        dockerfile: Dockerfile
+        buildArgs:
+          CONFIG_FILE: "likes-config.yaml"
+
+  tagPolicy:
+    envTemplate:
+      template: >-
+        {{- if contains "loaded-pg" .IMAGE_NAME -}}
+          {{.POSTGRES_VERSION | default "17"}}
+        {{- else -}}
+          {{.GIT_COMMIT | default "HEJA"}}
+        {{- end -}}
+deploy:
+  helm:
+    hooks:
+      before:
+        - host:
+            command: ["sh", "-c", "./hooks.sh"]
+    releases:
+      - name: system-setup
+        chartPath: helm/system-setup
+        valuesFiles:
+          - helm/system-setup/values.yaml
+        version: 0.1.0
+        wait: true
+
+      - name: ott
+        chartPath: helm/ott
+        valuesFiles:
+          - helm/ott/values.yaml
+        setValueTemplates:
+          deployments[0].image.fqn: "{{.IMAGE_FULLY_QUALIFIED_likes_connector}}"
+          deployments[1].image.fqn: "{{.IMAGE_FULLY_QUALIFIED_posts_connector}}"
+        version: 0.1.0

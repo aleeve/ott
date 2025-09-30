@@ -1,0 +1,13 @@
+version = "2.0"
+current_profile = "k8-config-map-deployment"
+
+[profile.k8-config-map-deployment]
+cluster = "k8-config-map-deployment"
+
+[cluster.k8-config-map-deployment]
+endpoint = "fluvio-sc-public:9003"
+use_spu_local_address = true
+
+
+[cluster.k8-config-map-deployment.tls]
+tls_policy = "disabled"

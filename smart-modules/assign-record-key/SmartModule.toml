@@ -1,0 +1,12 @@
+[package]
+name = "assign-record-key"
+group = "aleeve"
+version = "0.1.0"
+apiVersion = "0.1.0"
+description = "Removes a toplevel json field and uses the value as the record key"
+license = "Apache-2.0"
+visibility = "public"
+
+[[params]]
+name = "key"
+description = "The json field that should become the record key"

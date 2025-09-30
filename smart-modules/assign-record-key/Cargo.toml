@@ -1,0 +1,20 @@
+[package]
+name = "assign-record-key"
+version = "0.1.0"
+authors = ["Alex Evert <alex.evert@eghed.se>"]
+edition = "2024"
+
+[lib]
+crate-type = ['cdylib']
+
+[dependencies]
+eyre = "0.6.12"
+fluvio-smartmodule = "0.50.1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+
+[profile.release-lto]
+inherits = "release"
+lto = true
+strip = "symbols"

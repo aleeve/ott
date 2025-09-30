@@ -1,0 +1,9 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: postgres
+spec:
+  instances: 1
+  imageName: {{ .Values.postgresql.imageName }}
+  storage:
+    size: 10Gi
