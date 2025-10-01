@@ -1,10 +1,9 @@
 use eyre::eyre;
 use fluvio_smartmodule::{RecordData, Result, SmartModuleRecord, smartmodule};
 use serde_json::{Map, Value};
-use std::str::FromStr;
 
-#[smartmodule(map)]
-pub fn map(record: &SmartModuleRecord) -> Result<(Option<RecordData>, RecordData)> {
+#[smartmodule(filter_map)]
+pub fn filter_map(record: &SmartModuleRecord) -> Result<Option<(Option<RecordData>, RecordData)>> {
     let key = record.key.clone();
 
     let string = std::str::from_utf8(record.value.as_ref())?;
@@ -13,11 +12,14 @@ pub fn map(record: &SmartModuleRecord) -> Result<(Option<RecordData>, RecordData
         .as_object_mut()
         .ok_or(eyre!("Failed to parse value"))?;
 
-    let uri = get_uri(obj)?;
-    let uri_value = Value::String(uri);
-    obj.insert("uri".to_string(), uri_value);
+    if let Ok(uri) = get_uri(obj) {
+        let uri_value = Value::String(uri);
+        obj.insert("uri".to_string(), uri_value);
 
-    Ok((key, value.to_string().as_str().into()))
+        Ok(Some((key, value.to_string().as_str().into())))
+    } else {
+        Ok(None)
+    }
 }
 
 fn get_uri(obj: &Map<String, Value>) -> Result<String> {
