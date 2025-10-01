@@ -6,3 +6,6 @@ apiVersion = "0.1.0"
 description = ""
 license = "Apache-2.0"
 visibility = "private"
+[[params]]
+name = "key"
+description = "Dummy param to fix smdk load"
