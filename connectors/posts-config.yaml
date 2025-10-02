@@ -9,7 +9,7 @@ meta:
 http:
   endpoint: "wss://jetstream2.us-east.bsky.network/subscribe?wantedCollections=app.bsky.feed.post"
 transforms:
-  - uses: aleeve/contruct-post-uri@0.1.0
+  - uses: aleeve/construct-post-uri@0.1.0
   - uses: aleeve/assign-record-key@0.1.0
     with:
       key: uri
