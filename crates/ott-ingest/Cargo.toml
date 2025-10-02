@@ -14,7 +14,6 @@ tokio-postgres = "0.7.14"
 tokio-stream = "0.1.17"
 tracing = "0.1.41"
 tracing-subscriber = { version = "0.3.20", features = ["env-filter"] }
-typify = "0.4.3"
 
 [build-dependencies]
 anyhow = "1.0.100"
