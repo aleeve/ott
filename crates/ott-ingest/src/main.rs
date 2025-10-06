@@ -32,7 +32,6 @@ struct Post {
 #[derive(Debug, Deserialize, Clone)]
 struct Like {
     did: String,
-    #[serde(rename = "commit.record.subject.uri")]
     uri: String,
 }
 
@@ -89,22 +88,25 @@ async fn main() {
                 });
             },
             Some(Ok(record)) = like_stream.next() => {
-                let like: Like = serde_json::from_slice(record.value()).unwrap();
-                lcc.entry(like.uri)
-                    .and_compute_with(|maybe_entry| {
-                        if let Some(entry) = maybe_entry {
-                            let mut post = entry.into_value();
-                            if post.count < 2 {
-                                post.count +=1;
-                                warn!("Incread counter for {:#?}", post);
-                                Op::Put(post)
+                if let Ok(like) = serde_json::from_slice::<Like>(record.value()) {
+                    lcc.entry(like.uri)
+                        .and_compute_with(|maybe_entry| {
+                            if let Some(entry) = maybe_entry {
+                                let mut post = entry.into_value();
+                                if post.count < 20 {
+                                    post.count +=1;
+                                    warn!("Incread counter for {:#?}", post);
+                                    Op::Put(post)
+                                } else {
+                                    Op::Remove
+                                }
                             } else {
-                                Op::Remove
+                                Op::Nop // Skip as post is out of cache
                             }
-                        } else {
-                            Op::Nop // Skip as post is out of cache
-                        }
-                });
+                    });
+                 } else {
+                     warn!("Failed deserializing, likely not like commit");
+                };
             }
         }
     }

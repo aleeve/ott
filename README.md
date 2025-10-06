@@ -9,12 +9,13 @@ OTT is an over the top bluesky custom feed (in the making)
 ## Install dependencies
 
 ```shell
-brew install kind helm skaffold fluvio
-```
+# Install k8s tooling
+brew install kind helm skaffold
 
-## Rust
+# Install fvm and fluvio cli
+curl -fsS https://hub.infinyon.cloud/install/install.sh | bash
 
-```shell
+# Install rust
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```
 

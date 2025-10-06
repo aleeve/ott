@@ -23,22 +23,44 @@ pub fn filter_map(record: &SmartModuleRecord) -> Result<Option<(Option<RecordDat
 }
 
 fn get_uri(obj: &Map<String, Value>) -> Result<String> {
-    let did = obj
-        .get("did")
+    let collection = obj
+        .get("commit")
+        .and_then(|v| v.get("collection"))
         .and_then(|v| v.as_str())
-        .ok_or(eyre!("did missing or not a string"))?;
+        .ok_or(eyre!("Missing commit.collection"))?;
+    match collection {
+       "app.bsky.feed.post" => {
+           let did = obj
+            .get("did")
+            .and_then(|v| v.as_str())
+            .ok_or(eyre!("did missing or not a string"))?;
 
-    let commit = obj.get("commit").ok_or(eyre!("commit missing"))?;
+            let commit = obj.get("commit").ok_or(eyre!("commit missing"))?;
 
-    let collection = commit
-        .get("collection")
-        .and_then(|v| v.as_str())
-        .ok_or(eyre!("commit.collection missing or not a string"))?;
+            let collection = commit
+                .get("collection")
+                .and_then(|v| v.as_str())
+                .ok_or(eyre!("commit.collection missing or not a string"))?;
 
-    let rkey = commit
-        .get("rkey")
-        .and_then(|v| v.as_str())
-        .ok_or(eyre!("commit.rkey missing or not a string"))?;
+            let rkey = commit
+                .get("rkey")
+                .and_then(|v| v.as_str())
+                .ok_or(eyre!("commit.rkey missing or not a string"))?;
 
-    Ok(format!("at://{did}/{collection}/{rkey}"))
+            Ok(format!("at://{did}/{collection}/{rkey}"))
+        },
+        "app.bsky.feed.like" => {
+            let uri = obj
+                .get("commit")
+                .and_then(|v| v.get("record"))
+                .and_then(|v| v.get("subject"))
+                .and_then(|v| v.get("uri"))
+                .and_then(|v| v.as_str())
+                .ok_or(eyre!("Likely not commit message"))?;
+            Ok(uri.to_string())
+        }
+       &_ => {
+           Err(eyre!("Not supported yet"))
+       }
+    }
 }

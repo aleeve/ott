@@ -8,3 +8,8 @@ meta:
     batch-size: "4 MB"
 http:
   endpoint: "wss://jetstream2.us-east.bsky.network/subscribe?wantedCollections=app.bsky.feed.like"
+transforms:
+  - uses: aleeve/construct-post-uri@0.1.0
+  - uses: aleeve/assign-record-key@0.1.0
+    with:
+      key: uri
