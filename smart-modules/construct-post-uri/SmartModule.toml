@@ -1,5 +1,5 @@
 [package]
-name = "contruct-post-uri"
+name = "construct-post-uri"
 group = "aleeve"
 version = "0.1.0"
 apiVersion = "0.1.0"
