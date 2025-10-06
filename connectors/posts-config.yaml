@@ -1,0 +1,10 @@
+apiVersion: 0.1.0
+meta:
+  version: x.y.z
+  name: posts-connector
+  type: http-source
+  topic: raw-posts
+  producer:
+    batch-size: "4 MB"
+http:
+  endpoint: "wss://jetstream2.us-east.bsky.network/subscribe?wantedCollections=app.bsky.feed.post"

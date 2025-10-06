@@ -1,0 +1,15 @@
+postgresql:
+  imageName: loaded-pg:17
+
+deployments:
+  - name: likes-connector
+    image:
+      fqn: likes-connector
+      pullPolicy: IfNotPresent
+    replicas: 1
+
+  - name: posts-connector
+    image:
+      fqn: posts-connector
+      pullPolicy: IfNotPresent
+    replicas: 1

@@ -1,0 +1,4 @@
+transforms:
+  - uses: aleeve/assign-record-key@0.1.0
+    with:
+      key: the_record
