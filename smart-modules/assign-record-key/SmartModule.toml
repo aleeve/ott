@@ -10,3 +10,7 @@ visibility = "public"
 [[params]]
 name = "key"
 description = "The json field that should become the record key"
+
+[[params]]
+name = "delete"
+description = "Wether to delete the field when promoting it to record key"
