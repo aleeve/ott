@@ -17,6 +17,10 @@ curl -fsS https://hub.infinyon.cloud/install/install.sh | bash
 
 # Install rust
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+
+# Install tei
+cargo install --git https://github.com/huggingface/text-embeddings-inference
+
 ```
 
 ## Create a cluster
