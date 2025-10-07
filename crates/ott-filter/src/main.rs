@@ -1,59 +1,26 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use tokio::{
     select,
     sync::mpsc::{self, Receiver, Sender},
-    time::{sleep, Duration},
+    time::Duration,
 };
 
 use tokio_stream::StreamExt;
-use tracing::{debug, error, info, warn};
-use tracing_subscriber::{field::display, fmt, EnvFilter};
+use tracing::{error, info, warn};
+use tracing_subscriber::EnvFilter;
 
 use fluvio::{
-    consumer::{ConsumerConfigExtBuilder, ConsumerRecord, ConsumerStream},
+    consumer::{ConsumerConfigExtBuilder, ConsumerStream},
     Fluvio, Offset,
 };
 use moka::{ops::compute::Op, sync::Cache};
-use ott_ingest::tei_client::TextEmbedding;
+use ott_filter::tei_client::TextEmbedding;
+use ott_types::{Commit, Like, Post, RawPost};
 
 const LIKES_TOPIC: &str = "raw-likes";
 const POSTS_TOPIC: &str = "raw-posts";
 const PARTITION_NUM: u32 = 0;
 const TEI_URL: &str = "http://localhost:8080";
-
-#[derive(Debug, Deserialize, Clone)]
-struct RawPost {
-    did: String,
-    uri: String,
-    commit: Commit,
-}
-
-#[derive(Debug, Deserialize, Clone)]
-#[serde(tag = "operation", rename_all = "lowercase")]
-enum Commit {
-    Create { record: Record },
-    Delete,
-    Update,
-}
-
-#[derive(Debug, Deserialize, Clone)]
-struct Record {
-    text: String,
-}
-
-#[derive(Debug, Deserialize, Clone, Default)]
-struct Post {
-    did: String,
-    uri: String,
-    text: String,
-    count: u32,
-}
-
-#[derive(Debug, Deserialize, Clone)]
-struct Like {
-    did: String,
-    uri: String,
-}
 
 #[tokio::main]
 async fn main() {
@@ -75,7 +42,6 @@ async fn main() {
     let (mut posts_stream, mut like_stream) = tokio::join!(posts_fut, like_fut);
 
     let (embed_tx, embed_rx) = mpsc::channel::<Post>(1000);
-    let (store_tx, store_rx) = mpsc::channel::<PostEmbedding>(1000);
 
     // Start embedding tracing_subscriber
     let fut = async move {
