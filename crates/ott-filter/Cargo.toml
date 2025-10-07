@@ -6,6 +6,7 @@ edition = "2024"
 [dependencies]
 fluvio = "0.50.1"
 moka = { version = "0.12.11", features = ["sync"] }
+ott-types = { version = "0.1.0", path = "../ott-types" }
 reqwest = { version = "0.12.23", features = ["json"] }
 serde = { version = "1.0.226", features = ["derive"] }
 serde_json = "1.0.145"

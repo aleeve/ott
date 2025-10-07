@@ -11,16 +11,16 @@ use tracing_subscriber::EnvFilter;
 
 use fluvio::{
     consumer::{ConsumerConfigExtBuilder, ConsumerStream},
+    metadata::topic::TopicSpec,
     Fluvio, Offset,
 };
 use moka::{ops::compute::Op, sync::Cache};
-use ott_filter::tei_client::TextEmbedding;
 use ott_types::{Commit, Like, Post, RawPost};
 
 const LIKES_TOPIC: &str = "raw-likes";
-const POSTS_TOPIC: &str = "raw-posts";
+const RAW_POSTS_TOPIC: &str = "raw-posts";
+const POSTS_TOPIC: &str = "posts";
 const PARTITION_NUM: u32 = 0;
-const TEI_URL: &str = "http://localhost:8080";
 
 #[tokio::main]
 async fn main() {
@@ -37,7 +37,26 @@ async fn main() {
         .await
         .expect("Failed to connect to Fluvio");
 
-    let posts_fut = get_topic_stream(POSTS_TOPIC, PARTITION_NUM, &fluvio);
+    // Create a topic
+    let admin = fluvio.admin().await;
+    let topics = admin
+        .all::<TopicSpec>()
+        .await
+        .expect("Failed to list topics")
+        .iter()
+        .map(|topic| topic.name.clone())
+        .collect::<Vec<String>>();
+
+    if !topics.contains(&POSTS_TOPIC.to_string()) {
+        warn!("Creating posts topic");
+        let topic_spec = TopicSpec::new_computed(1, 1, None);
+        admin
+            .create(POSTS_TOPIC.to_string(), false, topic_spec)
+            .await
+            .unwrap();
+    };
+
+    let posts_fut = get_topic_stream(RAW_POSTS_TOPIC, PARTITION_NUM, &fluvio);
     let like_fut = get_topic_stream(LIKES_TOPIC, PARTITION_NUM, &fluvio);
     let (mut posts_stream, mut like_stream) = tokio::join!(posts_fut, like_fut);
 
@@ -45,7 +64,7 @@ async fn main() {
 
     // Start embedding tracing_subscriber
     let fut = async move {
-        embed_post(embed_rx, store_tx).await;
+        embed_post(embed_rx).await;
     };
     tokio::spawn(fut);
 
@@ -127,17 +146,18 @@ struct PostEmbedding {
     vector: Vec<f32>,
 }
 
-async fn embed_post(mut post_rx: Receiver<Post>, embedding_tx: Sender<PostEmbedding>) {
-    let tei_client = TextEmbedding::new(TEI_URL);
+async fn embed_post(mut post_rx: Receiver<Post>) {
+    let producer = fluvio::producer(POSTS_TOPIC)
+        .await
+        .expect("Failed to create producer");
+
     while let Some(post) = post_rx.recv().await {
-        if let Ok(vec) = tei_client.embed(post.text.as_str()).await {
-            embedding_tx
-                .send(PostEmbedding {
-                    uri: post.uri,
-                    vector: vec,
-                })
-                .await
-                .expect("Failed to send vector");
-        };
+        producer
+            .send(
+                fluvio::RecordKey::NULL,
+                serde_json::to_string(&post).unwrap(),
+            )
+            .await
+            .expect("Failed to send record");
     }
 }
