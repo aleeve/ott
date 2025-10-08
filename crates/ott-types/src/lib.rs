@@ -33,3 +33,9 @@ pub struct Like {
     pub did: String,
     pub uri: String,
 }
+
+#[derive(Debug, Clone)]
+pub struct Embedding {
+    pub uri: String,
+    pub vector: Vec<f32>,
+}

@@ -134,11 +134,11 @@ async fn get_topic_stream(topic: &str, partition: u32, fluvio: &Fluvio) -> impl 
         .offset_start(Offset::beginning())
         .build()
         .expect("Failed to build consumer config");
-    let posts_stream = fluvio
+    let stream = fluvio
         .consumer_with_config(config)
         .await
         .expect("Failed to create consumer");
-    posts_stream
+    stream
 }
 
 struct PostEmbedding {

@@ -2490,6 +2490,7 @@ name = "ott-embed"
 version = "0.1.0"
 dependencies = [
  "fluvio",
+ "ott-types",
  "pgvector",
  "reqwest",
  "rstest",

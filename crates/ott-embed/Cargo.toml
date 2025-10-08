@@ -5,6 +5,7 @@ edition = "2024"
 
 [dependencies]
 fluvio = "0.50.1"
+ott-types = { version = "0.1.0", path = "../ott-types" }
 pgvector = { version = "0.4", features = ["sqlx"] }
 reqwest = { version = "0.12.23", features = ["json"] }
 serde = { version = "1.0.226", features = ["derive"] }
