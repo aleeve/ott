@@ -7,3 +7,7 @@ spec:
   imageName: {{ .Values.postgresql.imageName }}
   storage:
     size: 10Gi
+  enableSuperuserAccess: true
+  postgresql:
+    shared_preload_libraries:
+      - pg_cron

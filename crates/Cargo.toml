@@ -1,3 +1,3 @@
 [workspace]
 resolver = "3"
-members = ["ott-types", "ott-filter", "ott-embed", "ott-xrpc"]
+members = ["ott-types", "ott-filter", "ott-embed", "ott-xrpc", "ott-db-migration"]
