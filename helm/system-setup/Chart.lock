@@ -2,5 +2,8 @@ dependencies:
 - name: cloudnative-pg
   repository: file://charts/cloudnative-pg
   version: 0.26.0
-digest: sha256:d46807e0d885c76d3a39b218b34bef29e881a17ca47924f65020ae3616b22e3b
-generated: "2025-09-27T00:29:50.760394+02:00"
+- name: metrics-server
+  repository: file://charts/metrics-server
+  version: 3.13.0
+digest: sha256:a5b5d0681369d13bd43df164d0825e596f20f470055b010604efa81fc383ccb5
+generated: "2025-10-07T14:14:51.577283+02:00"

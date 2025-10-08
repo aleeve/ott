@@ -11,3 +11,6 @@ dependencies:
     version: "0.26.0"
     repository: "file://charts/cloudnative-pg"
     condition: postgresql.enabled
+  - name: metrics-server
+    version: "3.x.x"
+    repository: "file://charts/metrics-server"

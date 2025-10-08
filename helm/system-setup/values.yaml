@@ -2,3 +2,7 @@ postgresql:
   enabled: true
 fluvio:
   enabled: true
+
+metrics-server:
+   args:
+     - --kubelet-insecure-tls
