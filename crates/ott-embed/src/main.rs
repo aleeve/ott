@@ -1,9 +1,14 @@
+use std::time::Duration;
+
+use ott_embed::pg_client::PgClient;
 use ott_embed::tei_client::TextEmbedding;
-use serde::{Deserialize, Serialize};
-use tokio::sync::mpsc::{self, Receiver, Sender};
+use tokio::{
+    sync::mpsc::{Receiver, Sender},
+    time::interval,
+};
 
 use tokio_stream::StreamExt;
-use tracing::{error, info, warn};
+use tracing::{debug, error, warn};
 use tracing_subscriber::EnvFilter;
 
 use fluvio::{consumer::ConsumerConfigExtBuilder, Fluvio, Offset};
@@ -71,7 +76,7 @@ async fn embed_task(mut posts: Receiver<Post>, sink: Sender<Embedding>) {
                 .expect("Failed to send embedding between tasks");
             }
             Err(e) => {
-                error!(e);
+                error!("Failed to embed post! {} {}", post.uri, e);
             }
         };
     }
@@ -79,7 +84,47 @@ async fn embed_task(mut posts: Receiver<Post>, sink: Sender<Embedding>) {
 
 async fn store_task(mut embeddings: Receiver<Embedding>) {
     warn!("Ready to start storing embeddings");
-    while let Some(embedding) = embeddings.recv().await {
-        warn!("Embedded {}", embedding.uri)
+    let batch_size = 100;
+    let mut flush_timer = interval(Duration::from_millis(500));
+    let pg_client = PgClient::new().await.expect("Failed to connect to db");
+
+    let mut batch = Vec::with_capacity(batch_size);
+    loop {
+        error!("Storing");
+        tokio::select! {
+            Some(record) = embeddings.recv() => {
+                batch.push(record);
+                if batch.len() >= batch_size {
+                    if let Err(e) = pg_client.insert_embeddings(&batch).await {
+                        error!("Insert error: {}", e);
+                    }
+                    flush_timer.reset();
+                    batch.clear();
+                    debug!("Inserted normally");
+                }
+            }
+
+            // Flush periodically even if batch isn't full
+            _ = flush_timer.tick() => {
+                if !batch.is_empty() {
+                    if let Err(e) = pg_client.insert_embeddings(&batch).await {
+                        error!("Insert error: {}", e);
+                    }
+                    batch.clear();
+                    debug!("Inserted flushed");
+                }
+            }
+
+            // Channel closed
+            else => {
+                // Final flush
+                if !batch.is_empty() {
+                    if let Err(e) = pg_client.insert_embeddings(&batch).await {
+                        error!("Final insert error: {}", e);
+                    }
+                }
+                break;
+            }
+        }
     }
 }
