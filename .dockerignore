@@ -1,0 +1,56 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Rust
+**/target/
+*.rlib
+*.rmeta
+*.so
+*.dylib
+
+# Helm
+chart/
+charts/
+*.tgz
+.helmignore
+
+# IDE/Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+.env
+.env.local
+
+# Build artifacts
+build/
+dist/
+bin/
+*.exe
+*.o
+*.a
+
+# Node (if you have any frontend)
+node_modules/
+npm-debug.log
+
+# Documentation
+docs/
+README.md
+CHANGELOG.md
+LICENSE
+
+# Test artifacts
+.coverage
+
+# Misc
+.dockerignore
+Dockerfile
+docker-compose.yml
+skaffold.yaml
+skaffold.env
+kind-config.yaml
