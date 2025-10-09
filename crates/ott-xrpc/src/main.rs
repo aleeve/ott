@@ -1,7 +1,7 @@
 use anyhow::Result;
 use atproto_identity::{
     config::{default_env, optional_env, require_env, version, DnsNameservers},
-    key::{identify_key, to_public},
+    key::{generate_key, identify_key, to_public, KeyType},
 };
 use atproto_xrpcs::authorization::ResolvingAuthorization;
 use axum::{
@@ -62,7 +62,8 @@ async fn main() -> Result<()> {
     let service_did = format!("did:web:{}", external_base);
     let dns_nameservers: DnsNameservers = optional_env("DNS_NAMESERVERS").try_into()?;
 
-    let private_service_key = require_env("SERVICE_KEY")?;
+    let private_service_key = generate_key(KeyType::P256Private)?.to_string();
+
     let private_service_key_data = identify_key(&private_service_key)?;
     let public_service_key_data = to_public(&private_service_key_data)?;
     let public_service_key = public_service_key_data.to_string();
@@ -118,7 +119,7 @@ async fn main() -> Result<()> {
 }
 
 async fn handle_index() -> Html<&'static str> {
-    Html("<html><body><h1>Hello, World!</h1></body></html>")
+    Html("<html><body><h1>Right place wrong protocol...</h1></body></html>")
 }
 
 // /.well-known/did.json
