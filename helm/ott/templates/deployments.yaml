@@ -20,4 +20,6 @@ spec:
       - name: connector
         image: "{{ .image.fqn }}"
         imagePullPolicy: {{ .image.pullPolicy }}
+        env:
+        {{- toYaml .env | nindent 10 }}
 {{- end }}

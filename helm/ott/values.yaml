@@ -24,6 +24,19 @@ deployments:
     image:
       fqn: ott-embed
       pullPolicy: IfNotPresent
+    env:
+    - name: DATABASE_USER
+      valueFrom:
+        secretKeyRef:
+          name: postgres-app
+          key: username
+    - name: DATABASE_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: postgres-app
+          key: password
+    - name: DATABASE_URL
+      value: "postgres://$(DATABASE_USER):$(DATABASE_PASSWORD)@postgres-rw.default.svc.cluster.local:5432"
 
   - name: ott-xrpc
     image:
@@ -31,3 +44,6 @@ deployments:
       pullPolicy: IfNotPresent
     replicas: 1
     replicas: 1
+    env:
+    - name: EXTERNAL_BASE
+      value: localhost 
