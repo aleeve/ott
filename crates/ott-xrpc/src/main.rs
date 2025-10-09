@@ -147,10 +147,10 @@ async fn handle_xrpc_hello_world(
 ) -> Json<serde_json::Value> {
     println!("headers {headers:?}");
     let subject = parameters.subject.as_deref().unwrap_or("World");
-    let message = if authorization.is_none() {
-        format!("Hello, {subject}!")
+    let message = if let Some(auth) = authorization {
+        format!("Hello, authenticated {}! (caller: {})", subject, auth.3)
     } else {
-        format!("Hello, authenticated {subject}!")
+        format!("Hello, {}!", subject)
     };
     Json(json!({ "message": message }))
 }

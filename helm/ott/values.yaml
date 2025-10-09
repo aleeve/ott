@@ -13,3 +13,21 @@ deployments:
       fqn: posts-connector
       pullPolicy: IfNotPresent
     replicas: 1
+
+  - name: ott-filter
+    image:
+      fqn: ott-filter
+      pullPolicy: IfNotPresent
+    replicas: 1
+
+  - name: ott-embed
+    image:
+      fqn: ott-embed
+      pullPolicy: IfNotPresent
+
+  - name: ott-xrpc
+    image:
+      fqn: ott-embed
+      pullPolicy: IfNotPresent
+    replicas: 1
+    replicas: 1

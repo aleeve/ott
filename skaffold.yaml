@@ -21,6 +21,28 @@ build:
         buildArgs:
           CONFIG_FILE: "likes-config.yaml"
 
+
+    - image: ott-embed
+      context: .
+      docker:
+        dockerfile: docker/rust-service/Dockerfile
+        buildArgs:
+          CRATE_NAME: "ott-embed"
+
+    - image: ott-filter
+      context: .
+      docker:
+        dockerfile: docker/rust-service/Dockerfile
+        buildArgs:
+          CRATE_NAME: "ott-filter"
+
+    - image: ott-xrpc
+      context: .
+      docker:
+        dockerfile: docker/rust-service/Dockerfile
+        buildArgs:
+          CRATE_NAME: "ott-xrpc"
+
   tagPolicy:
     envTemplate:
       template: >-
@@ -50,4 +72,7 @@ deploy:
         setValueTemplates:
           deployments[0].image.fqn: "{{.IMAGE_FULLY_QUALIFIED_likes_connector}}"
           deployments[1].image.fqn: "{{.IMAGE_FULLY_QUALIFIED_posts_connector}}"
+          deployments[2].image.fqn: "{{.IMAGE_FULLY_QUALIFIED_ott_filter}}"
+          deployments[3].image.fqn: "{{.IMAGE_FULLY_QUALIFIED_ott_embed}}"
+          deployments[4].image.fqn: "{{.IMAGE_FULLY_QUALIFIED_ott_xrpc}}"
         version: 0.1.0

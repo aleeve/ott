@@ -19,8 +19,16 @@ COPY crates .
 RUN cargo build --release --bin ${CRATE_NAME}
 
 # We do not need the Rust toolchain to run the binary!
-FROM debian:bookworm-slim AS runtime
+FROM debian:trixie-slim AS runtime
 ARG CRATE_NAME
-WORKDIR /workspace
+ENV USER=${CRATE_NAME}
+RUN useradd \
+  --create-home \
+  --home-dir "/home/$USER" \
+  --shell /bin/bash \
+  "$USER"
+USER $USER
+WORKDIR /home/${CRATE_NAME}
+COPY ./connectors/fluvio_profile.toml /home/${CRATE_NAME}/.fluvio/config
 COPY --from=builder /workspace/target/release/${CRATE_NAME} /usr/local/bin/app
 ENTRYPOINT ["/usr/local/bin/app"]

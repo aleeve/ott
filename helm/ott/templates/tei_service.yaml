@@ -1,0 +1,14 @@
+# Service to reach tei serive on host, beacuse mac GPU acceleration doesn't 
+# work in docker
+apiVersion: v1
+kind: Service
+metadata:
+  name: tei-host-service
+  namespace: default
+spec:
+  type: ExternalName
+  externalName: host.docker.internal
+  ports:
+  - port: 8080
+    targetPort: 8080
+    protocol: TCP

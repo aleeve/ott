@@ -14,7 +14,7 @@ use tracing_subscriber::EnvFilter;
 use fluvio::{consumer::ConsumerConfigExtBuilder, Fluvio, Offset};
 use ott_types::{Embedding, Post};
 
-const TEI_URL: &str = "http://localhost:8080";
+const TEI_URL: &str = "http://tei-host-service:8080";
 const TOPIC: &str = "posts";
 const PARTITION: u32 = 0;
 
