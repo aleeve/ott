@@ -2,7 +2,7 @@
 
 -- Configure pg_partman for the table
 SELECT create_parent(
-    p_parent_table => 'public.vectors',
+    p_parent_table => 'vectors',
     p_control => 'created_at',
     p_interval => '30 minutes',
     p_type => 'range',
@@ -16,4 +16,4 @@ SET
     retention = '2 hours',
     infinite_time_partitions = true,
     automatic_maintenance = 'on'
-WHERE parent_table = 'public.vectors';
+WHERE parent_table = 'vectors';

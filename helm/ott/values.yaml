@@ -38,7 +38,7 @@ deployments:
           name: postgres-app
           key: password
     - name: DATABASE_URL
-      value: "postgres://$(DATABASE_USER):$(DATABASE_PASSWORD)@postgres-rw.default.svc.cluster.local:5432"
+      value: "postgres://$(DATABASE_USER):$(DATABASE_PASSWORD)@postgres-rw.default.svc.cluster.local:5432/app"
 
   - name: ott-xrpc
     image:
