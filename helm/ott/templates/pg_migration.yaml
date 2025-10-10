@@ -1,0 +1,48 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: migration-pg
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "5"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 3
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: db-init
+        image: "{{ .Values.postgresql.migration_image_fqn }}"
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: DATABASE_USER
+          valueFrom:
+            secretKeyRef:
+              name: postgres-superuser
+              key: username
+        - name: DATABASE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-superuser
+              key: password
+        - name: DATABASE_URL
+          value: "postgres://$(DATABASE_USER):$(DATABASE_PASSWORD)@postgres-rw.default.svc.cluster.local:5432"
+        command:
+        - /bin/sh
+        - -c
+        - |
+          echo "Waiting for database to be ready..."
+          for i in {1..30}; do
+            if pg_isready -h $DATABASE_URL; then
+              echo "Database is ready!"
+              break
+            fi
+            echo "Attempt $i/30: Database not ready yet, waiting..."
+            sleep 10
+          done
+
+          echo "Setting up migration"
+          ./app
+          
+          echo "Database initialization completed!"

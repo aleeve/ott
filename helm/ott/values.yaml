@@ -1,5 +1,7 @@
 postgresql:
   imageName: loaded-pg:17
+  migration_image_fqn: migration-pg:17
+
 
 deployments:
   - name: likes-connector

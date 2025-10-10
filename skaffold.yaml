@@ -4,10 +4,23 @@ metadata:
   name: ott
 build:
   artifacts:
+    #
+    #   Database images
+    #
     - image: loaded-pg
       context: docker/postgres
       docker:
         dockerfile: Dockerfile
+    - image: migration-pg
+      context: .
+      docker:
+        dockerfile: docker/postgres/migration.Dockerfile
+        buildArgs:
+          CRATE_NAME: "ott-db-migration"
+
+    #
+    #   CONNECTORS 
+    #
     - image: posts-connector
       context: connectors
       docker:
@@ -22,26 +35,28 @@ build:
           CONFIG_FILE: "likes-config.yaml"
 
 
+    #
+    # The actual main services
+    #
     - image: ott-embed
       context: .
       docker:
         dockerfile: docker/rust-service/Dockerfile
         buildArgs:
           CRATE_NAME: "ott-embed"
-
     - image: ott-filter
       context: .
       docker:
         dockerfile: docker/rust-service/Dockerfile
         buildArgs:
           CRATE_NAME: "ott-filter"
-
     - image: ott-xrpc
       context: .
       docker:
         dockerfile: docker/rust-service/Dockerfile
         buildArgs:
           CRATE_NAME: "ott-xrpc"
+
 
   tagPolicy:
     envTemplate:
@@ -70,6 +85,7 @@ deploy:
         valuesFiles:
           - helm/ott/values.yaml
         setValueTemplates:
+          postgresql.migration_image_fqn: "{{.IMAGE_FULLY_QUALIFIED_migration_pg}}"
           deployments[0].image.fqn: "{{.IMAGE_FULLY_QUALIFIED_likes_connector}}"
           deployments[1].image.fqn: "{{.IMAGE_FULLY_QUALIFIED_posts_connector}}"
           deployments[2].image.fqn: "{{.IMAGE_FULLY_QUALIFIED_ott_filter}}"
