@@ -18,3 +18,5 @@ output/
 .DS_Store
 *.log
 logs/
+
+*skaffold.env*
