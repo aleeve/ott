@@ -2,8 +2,11 @@ postgresql:
   imageName: loaded-pg:17
   migration_image_fqn: migration-pg:17
 
+cloudflare:
+  enabled: true
+  token: {}
 
-deployments:
+services:
   - name: likes-connector
     image:
       fqn: likes-connector

@@ -85,10 +85,11 @@ deploy:
         valuesFiles:
           - helm/ott/values.yaml
         setValueTemplates:
+          cloudflared.token: "{{.CLOUDFLARE_TUNNEL_TOKEN}}"
           postgresql.migration_image_fqn: "{{.IMAGE_FULLY_QUALIFIED_migration_pg}}"
-          deployments[0].image.fqn: "{{.IMAGE_FULLY_QUALIFIED_likes_connector}}"
-          deployments[1].image.fqn: "{{.IMAGE_FULLY_QUALIFIED_posts_connector}}"
-          deployments[2].image.fqn: "{{.IMAGE_FULLY_QUALIFIED_ott_filter}}"
-          deployments[3].image.fqn: "{{.IMAGE_FULLY_QUALIFIED_ott_embed}}"
-          deployments[4].image.fqn: "{{.IMAGE_FULLY_QUALIFIED_ott_xrpc}}"
+          services[0].image.fqn: "{{.IMAGE_FULLY_QUALIFIED_likes_connector}}"
+          services[1].image.fqn: "{{.IMAGE_FULLY_QUALIFIED_posts_connector}}"
+          services[2].image.fqn: "{{.IMAGE_FULLY_QUALIFIED_ott_filter}}"
+          services[3].image.fqn: "{{.IMAGE_FULLY_QUALIFIED_ott_embed}}"
+          services[4].image.fqn: "{{.IMAGE_FULLY_QUALIFIED_ott_xrpc}}"
         version: 0.1.0

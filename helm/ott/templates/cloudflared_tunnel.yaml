@@ -1,0 +1,38 @@
+{{- if .Values.cloudflare.enabled }}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: cloudflare-tunnel-token
+  namespace: {{ .Values.cloudflared.namespace }}
+type: Opaque
+stringData:
+  token: {{ required "cloudflared.token is required" .Values.cloudflared.token }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloudflare-tunnel
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cloudflare-tunnel
+  template:
+    metadata:
+      labels:
+        app: cloudflare-tunnel
+    spec:
+      containers:
+      - name: cloudflared
+        image: "cloudflare/cloudflared:latest"
+        args:
+          - tunnel
+          - run
+          - --token=$(CLOUDFLARE_TUNNEL_TOKEN)
+        env:
+        - name: CLOUDFLARE_TUNNEL_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: cloudflare-tunnel-token
+              key: token
+{{- end }}
