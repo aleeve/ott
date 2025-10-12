@@ -87,9 +87,10 @@ deploy:
         setValueTemplates:
           cloudflared.token: "{{.CLOUDFLARE_TUNNEL_TOKEN}}"
           postgresql.migration_image_fqn: "{{.IMAGE_FULLY_QUALIFIED_migration_pg}}"
-          services[0].image.fqn: "{{.IMAGE_FULLY_QUALIFIED_likes_connector}}"
-          services[1].image.fqn: "{{.IMAGE_FULLY_QUALIFIED_posts_connector}}"
-          services[2].image.fqn: "{{.IMAGE_FULLY_QUALIFIED_ott_filter}}"
-          services[3].image.fqn: "{{.IMAGE_FULLY_QUALIFIED_ott_embed}}"
-          services[4].image.fqn: "{{.IMAGE_FULLY_QUALIFIED_ott_xrpc}}"
+          services.likes_connector.image.fqn: "{{.IMAGE_FULLY_QUALIFIED_likes_connector}}"
+          services.posts_connector.image.fqn: "{{.IMAGE_FULLY_QUALIFIED_posts_connector}}"
+          services.ott_filter.image.fqn: "{{.IMAGE_FULLY_QUALIFIED_ott_filter}}"
+          services.ott_embed.image.fqn: "{{.IMAGE_FULLY_QUALIFIED_ott_embed}}"
+          services.ott_xrpc.image.fqn: "{{.IMAGE_FULLY_QUALIFIED_ott_xrpc}}"
+          services.ott_xrpc.env[0].value: "{{.EXTERNAL_BASE_URL}}"
         version: 0.1.0

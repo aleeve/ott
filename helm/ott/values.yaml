@@ -7,25 +7,25 @@ cloudflare:
   token: {}
 
 services:
-  - name: likes-connector
+  likes_connector:
     image:
       fqn: likes-connector
       pullPolicy: IfNotPresent
     replicas: 1
 
-  - name: posts-connector
+  posts_connector:
     image:
       fqn: posts-connector
       pullPolicy: IfNotPresent
     replicas: 1
 
-  - name: ott-filter
+  ott_filter:
     image:
       fqn: ott-filter
       pullPolicy: IfNotPresent
     replicas: 1
 
-  - name: ott-embed
+  ott_embed:
     image:
       fqn: ott-embed
       pullPolicy: IfNotPresent
@@ -43,7 +43,7 @@ services:
     - name: DATABASE_URL
       value: "postgres://$(DATABASE_USER):$(DATABASE_PASSWORD)@postgres-rw.default.svc.cluster.local:5432/app"
 
-  - name: ott-xrpc
+  ott_xrpc:
     image:
       fqn: ott-embed
       pullPolicy: IfNotPresent

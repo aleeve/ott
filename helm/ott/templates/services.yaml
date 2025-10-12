@@ -1,37 +1,38 @@
-{{- range .Values.services }}
+{{- range $name, $service := .Values.services }}
+{{- $serviceName := $name | replace "_" "-" }}
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .name }}
+  name: {{ $serviceName }}
   labels:
-    app: {{ .name }}
+    app: {{ $serviceName }}
 spec:
-  replicas: {{ .replicas | default 1 }}
+  replicas: {{ $service.replicas | default 1 }}
   selector:
     matchLabels:
-      app: {{ .name }}
+      app: {{ $serviceName }}
   template:
     metadata:
       labels:
-        app: {{ .name }}
+        app: {{ $serviceName }}
     spec:
       containers:
       - name: connector
-        image: "{{ .image.fqn }}"
-        imagePullPolicy: {{ .image.pullPolicy }}
+        image: "{{ $service.image.fqn }}"
+        imagePullPolicy: {{ $service.image.pullPolicy }}
         env:
-        {{- toYaml .env | nindent 10 }}
+        {{- toYaml $service.env | nindent 10 }}
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ .name }}
+  name: {{ $serviceName }}
   labels:
-    app: {{ .name }}
+    app: {{ $serviceName }}
 spec:
   selector:
-    app: {{ .name }}
+    app: {{ $serviceName }}
   ports:
   - port: 80
     targetPort: 8080
