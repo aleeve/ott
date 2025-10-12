@@ -4,6 +4,11 @@ use atproto_identity::{
     key::{generate_key, identify_key, to_public, KeyType},
 };
 use atproto_xrpcs::authorization::ResolvingAuthorization;
+use atrium_api::app::bsky::feed::defs::SkeletonFeedPost;
+
+use atrium_api::app::bsky::feed::get_feed_skeleton::{
+    OutputData as FeedResponse, ParametersData as FeedParameters,
+};
 use axum::{
     extract::{Query, State},
     response::{Html, IntoResponse, Response},
@@ -92,8 +97,8 @@ async fn main() -> Result<()> {
             get(handle_wellknown_atproto_did),
         )
         .route(
-            "/xrpc/garden.lexicon.ngerakines.helloworld.Hello",
-            get(handle_xrpc_hello_world),
+            "/xrpc/app.bsky.feed.getFeedSkeleton",
+            get(handle_get_feed_skeleton),
         )
         .with_state(web_context);
 
@@ -134,19 +139,14 @@ async fn handle_wellknown_atproto_did(service_did: State<ServiceDID>) -> Respons
     (StatusCode::OK, service_did.0 .0).into_response()
 }
 
-#[derive(Deserialize)]
-struct HelloParameters {
-    subject: Option<String>,
-}
-
 // /xrpc/garden.lexicon.ngerakines.helloworld.Hello
-async fn handle_xrpc_hello_world(
-    parameters: Query<HelloParameters>,
+async fn handle_get_feed_skeleton(
+    parameters: Query<FeedParameters>,
     headers: HeaderMap,
     authorization: Option<ResolvingAuthorization>,
 ) -> Json<serde_json::Value> {
     println!("headers {headers:?}");
-    let subject = parameters.subject.as_deref().unwrap_or("World");
+    let subject = parameters.feed.as_str();
     let message = if let Some(auth) = authorization {
         format!("Hello, authenticated {}! (caller: {})", subject, auth.3)
     } else {

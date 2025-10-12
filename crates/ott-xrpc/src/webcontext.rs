@@ -102,8 +102,8 @@ impl WebContext {
                     "publicKeyMultibase": config.public_service_key
                 }],
                 "service":[{
-                    "id":"#helloworld",
-                    "type":"HelloWorldService",
+                    "id":"#bsky_fg",
+                    "type":"BskyFeedGenerator",
                     "serviceEndpoint":format!("https://{external_base}")
                 }]
             }

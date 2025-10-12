@@ -10,6 +10,7 @@ atproto-identity = "0.13.0"
 atproto-oauth = "0.13.0"
 atproto-record = "0.13.0"
 atproto-xrpcs = "0.13.0"
+atrium-api = "0.25.6"
 axum = "0.8.6"
 clap = { version = "4.5.48", features = ["derive", "env"] }
 elliptic-curve = "0.13.8"
