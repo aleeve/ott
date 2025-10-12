@@ -2,7 +2,7 @@
 
 -- Configure pg_partman for the table
 SELECT create_parent(
-    p_parent_table => 'vectors',
+    p_parent_table => 'public.vectors',
     p_control => 'created_at',
     p_interval => '30 minutes',
     p_type => 'range',

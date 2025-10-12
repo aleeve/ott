@@ -28,6 +28,8 @@ spec:
               key: password
         - name: DATABASE_URL
           value: "postgres://$(DATABASE_USER):$(DATABASE_PASSWORD)@postgres-rw.default.svc.cluster.local:5432/app"
+        - name: POSTGRES_URL
+          value: "postgres://$(DATABASE_USER):$(DATABASE_PASSWORD)@postgres-rw.default.svc.cluster.local:5432/postgres"
         command:
         - /bin/sh
         - -c
@@ -41,6 +43,9 @@ spec:
             echo "Attempt $i/30: Database not ready yet, waiting..."
             sleep 10
           done
+
+          echo "Making sure extensions are installed"
+          psql "$POSTGRES_URL" -c "CREATE EXTENSION IF NOT EXISTS pg_cron;"
 
           echo "Setting up migration"
           ./app
