@@ -90,7 +90,6 @@ async fn store_task(mut embeddings: Receiver<Embedding>) {
 
     let mut batch = Vec::with_capacity(batch_size);
     loop {
-        error!("Storing");
         tokio::select! {
             Some(record) = embeddings.recv() => {
                 batch.push(record);
