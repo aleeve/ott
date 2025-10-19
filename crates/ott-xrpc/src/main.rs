@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 
-use axum::{Json, Router};
+use axum::{routing::get, Json, Router};
 use jacquard::types::did_doc::{DidDocument, Service, VerificationMethod};
 use jacquard_api::app_bsky::feed::{
     get_feed_skeleton::{GetFeedSkeletonOutput, GetFeedSkeletonRequest},
@@ -17,8 +17,13 @@ use jacquard_identity::resolver::ResolverOptions;
 use jacquard_identity::JacquardResolver;
 use ott_xrpc::{bsky::BskyClient, key::generate_key};
 
+use serde_json::Value;
 use tracing::info;
 use tracing_subscriber::EnvFilter;
+
+async fn handle_wellknown_atproto_did() -> Json<serde_json::Value> {
+    Json::from(Value::from("did:web:ott.aleeve.dev"))
+}
 
 async fn handler(
     ExtractServiceAuth(auth): ExtractServiceAuth,
@@ -55,7 +60,7 @@ async fn main() {
 
     let verification_method = VerificationMethod {
         id: format!("{}#atproto", did_str).into(),
-        r#type: "Mutlikey".into(),
+        r#type: "Multikey".into(),
         controller: Some("did:web:ott.aleeve.dev".into()),
         public_key_multibase: Some(generate_key().into()),
         extra_data: BTreeMap::default(),
@@ -83,7 +88,11 @@ async fn main() {
     let app = Router::new()
         .merge(GetFeedSkeletonRequest::into_router(handler))
         .with_state(config)
-        .merge(did_web_router(did_doc));
+        .merge(did_web_router(did_doc))
+        .route(
+            "/.well-known/atproto-did",
+            get(handle_wellknown_atproto_did),
+        );
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:8080").await.unwrap();
     info!("Starting service");
