@@ -16,4 +16,4 @@ SET
     retention = '2 hours',
     infinite_time_partitions = true,
     automatic_maintenance = 'on'
-WHERE parent_table = 'vectors';
+WHERE parent_table = 'public.vectors';
