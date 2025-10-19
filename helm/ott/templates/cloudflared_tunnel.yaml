@@ -1,4 +1,4 @@
-{{- if .Values.cloudflare.enabled }}
+{{- if .Values.cloudflared.enabled }}
 apiVersion: v1
 kind: Secret
 metadata:

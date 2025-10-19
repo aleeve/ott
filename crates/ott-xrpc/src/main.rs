@@ -18,6 +18,7 @@ use jacquard_identity::JacquardResolver;
 use ott_xrpc::{bsky::BskyClient, key::generate_key};
 
 use tracing::info;
+use tracing_subscriber::EnvFilter;
 
 async fn handler(
     ExtractServiceAuth(auth): ExtractServiceAuth,
@@ -43,21 +44,27 @@ async fn handler(
 
 #[tokio::main]
 async fn main() {
+    tracing_subscriber::fmt()
+        .with_ansi(true) // Colors enabled (default)
+        .with_max_level(tracing::Level::INFO)
+        .init();
+
+    info!("Setup");
     let did_str = "did:web:ott.aleeve.dev";
     let did = Did::new_static(did_str);
 
     let verification_method = VerificationMethod {
-        id: "{did}#atproto".into(),
-        r#type: "Mutlikeybase".into(),
+        id: format!("{}#atproto", did_str).into(),
+        r#type: "Mutlikey".into(),
         controller: Some("did:web:ott.aleeve.dev".into()),
         public_key_multibase: Some(generate_key().into()),
         extra_data: BTreeMap::default(),
     };
 
     let service = Service {
-        id: "".into(),
-        service_endpoint: Some("".into()),
-        r#type: "".into(),
+        id: "#bsky_fg".into(),
+        service_endpoint: Some("https://ott.aleeve.dev/".into()),
+        r#type: "BskyFeedGenerator".into(),
         extra_data: BTreeMap::default(),
     };
 
@@ -78,6 +85,7 @@ async fn main() {
         .with_state(config)
         .merge(did_web_router(did_doc));
 
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:8080").await.unwrap();
+    info!("Starting service");
     axum::serve(listener, app).await.unwrap();
 }

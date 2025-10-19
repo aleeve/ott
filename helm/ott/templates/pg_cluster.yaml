@@ -9,5 +9,7 @@ spec:
     size: 10Gi
   enableSuperuserAccess: true
   postgresql:
+    parameters:
+      cron.database_name: "app"
     shared_preload_libraries:
       - pg_cron

@@ -4,11 +4,11 @@ postgresql:
 
 cloudflared:
   enabled: true
-  token: {}
+  token: null
 
 app_auth:
-  did: {}
-  key: {}
+  did: null
+  key: null
 
 services:
   likes_connector:
@@ -65,4 +65,4 @@ services:
       valueFrom:
         secretKeyRef:
           name: app-auth
-          key: KEY
+          key: key
