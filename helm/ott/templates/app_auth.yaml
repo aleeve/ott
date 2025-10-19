@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: app-auth
+  namespace: {{ .Values.cloudflared.namespace }}
+type: Opaque
+stringData:
+  did: {{ required "app_auth.did is required" .Values.app_auth.did }}
+  key: {{ required "app_auth.key is required" .Values.app_auth.key }}

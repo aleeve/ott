@@ -1,156 +1,83 @@
-use anyhow::Result;
-use atproto_identity::{
-    config::{default_env, optional_env, require_env, version, DnsNameservers},
-    key::{generate_key, identify_key, to_public, KeyType},
+use std::collections::BTreeMap;
+
+use axum::{Json, Router};
+use jacquard::types::did_doc::{DidDocument, Service, VerificationMethod};
+use jacquard_api::app_bsky::feed::{
+    get_feed_skeleton::{GetFeedSkeletonOutput, GetFeedSkeletonRequest},
+    SkeletonFeedPost,
 };
-use atproto_xrpcs::authorization::ResolvingAuthorization;
-use atrium_api::app::bsky::feed::defs::SkeletonFeedPost;
-
-use atrium_api::app::bsky::feed::get_feed_skeleton::{
-    OutputData as FeedResponse, ParametersData as FeedParameters,
+use jacquard_axum::did_web::did_web_router;
+use jacquard_axum::ExtractXrpc;
+use jacquard_axum::{
+    service_auth::{ExtractServiceAuth, ServiceAuthConfig},
+    IntoRouter,
 };
-use axum::{
-    extract::{Query, State},
-    response::{Html, IntoResponse, Response},
-    routing::get,
-    Json, Router,
-};
-use clap::Parser;
-use http::{HeaderMap, StatusCode};
-use ott_xrpc::webcontext::{ContextConfig, ServiceDID, ServiceDocument, WebContext};
-use serde::Deserialize;
-use serde_json::json;
+use jacquard_common::types::string::Did;
+use jacquard_identity::resolver::ResolverOptions;
+use jacquard_identity::JacquardResolver;
+use ott_xrpc::{bsky::BskyClient, key::generate_key};
 
-/// AT Protocol XRPC Hello World Service
-#[derive(Parser)]
-#[command(
-    name = "atproto-xrpcs-helloworld",
-    version,
-    about = "AT Protocol XRPC Hello World demonstration service",
-    long_about = "
-A demonstration XRPC service implementation showcasing the AT Protocol ecosystem.
-This service provides a simple \"Hello, World!\" endpoint that supports both
-authenticated and unauthenticated requests.
+use tracing::info;
 
-FEATURES:
-  - AT Protocol identity resolution and DID document management
-  - XRPC service endpoint with optional authentication
-  - DID:web identity publishing via .well-known endpoints
-  - JWT-based request authentication using AT Protocol standards
+async fn handler(
+    ExtractServiceAuth(auth): ExtractServiceAuth,
+    ExtractXrpc(args): ExtractXrpc<GetFeedSkeletonRequest>,
+) -> Result<Json<GetFeedSkeletonOutput<'static>>, String> {
+    let posts: Vec<SkeletonFeedPost<'static>> = vec![SkeletonFeedPost {
+        post: "at://did:plc:klugggc44dmpomjkuzyahzjd/app.bsky.feed.post/3m2y6a5h6os27"
+            .parse()
+            .map_err(|_| "Failed to parse uri".to_string())?,
+        feed_context: None,
+        extra_data: BTreeMap::default(),
+        reason: None,
+    }];
 
-ENVIRONMENT VARIABLES:
-  SERVICE_KEY          Private key for service identity (required)
-  EXTERNAL_BASE        External hostname for service endpoints (required)
-  PORT                HTTP server port (default: 8080)
-  PLC_HOSTNAME        PLC directory hostname (default: plc.directory)
-  USER_AGENT          HTTP User-Agent header (auto-generated)
-  DNS_NAMESERVERS     Custom DNS nameservers (optional)
-  CERTIFICATE_BUNDLES Additional CA certificates (optional)
-
-ENDPOINTS:
-  GET /                           HTML index page
-  GET /.well-known/did.json       DID document (DID:web)
-  GET /.well-known/atproto-did    AT Protocol DID identifier
-  GET /xrpc/.../Hello            Hello World XRPC endpoint
-"
-)]
-struct Args {}
+    let output = GetFeedSkeletonOutput::<'static> {
+        feed: posts,
+        cursor: None,
+        req_id: None,
+        extra_data: BTreeMap::default(),
+    };
+    Ok(Json(output.clone()))
+}
 
 #[tokio::main]
-async fn main() -> Result<()> {
-    let _args = Args::parse();
+async fn main() {
+    let did_str = "did:web:ott.aleeve.dev";
+    let did = Did::new_static(did_str);
 
-    let plc_hostname = default_env("PLC_HOSTNAME", "plc.directory");
-
-    let external_base = require_env("EXTERNAL_BASE")?;
-    let port = default_env("PORT", "8080");
-    let service_did = format!("did:web:{}", external_base);
-    let dns_nameservers: DnsNameservers = optional_env("DNS_NAMESERVERS").try_into()?;
-
-    let private_service_key = generate_key(KeyType::P256Private)?.to_string();
-
-    let private_service_key_data = identify_key(&private_service_key)?;
-    let public_service_key_data = to_public(&private_service_key_data)?;
-    let public_service_key = public_service_key_data.to_string();
-    let default_user_agent = format!(
-        "atproto-identity-rs ({}; +https://tangled.sh/@smokesignal.events/atproto-identity-rs)",
-        version()?
-    );
-    let user_agent = default_env("USER_AGENT", &default_user_agent);
-
-    let config = ContextConfig {
-        public_service_key,
-        private_service_key_data,
-        service_did,
-        plc_hostname,
-        external_base,
-        dns_nameservers,
-        user_agent,
+    let verification_method = VerificationMethod {
+        id: "{did}#atproto".into(),
+        r#type: "Mutlikeybase".into(),
+        controller: Some("did:web:ott.aleeve.dev".into()),
+        public_key_multibase: Some(generate_key().into()),
+        extra_data: BTreeMap::default(),
     };
-    let web_context = WebContext::new(config).unwrap();
 
-    let router = Router::new()
-        .route("/", get(handle_index))
-        .route("/.well-known/did.json", get(handle_wellknown_did_web))
-        .route(
-            "/.well-known/atproto-did",
-            get(handle_wellknown_atproto_did),
-        )
-        .route(
-            "/xrpc/app.bsky.feed.getFeedSkeleton",
-            get(handle_get_feed_skeleton),
-        )
-        .with_state(web_context);
-
-    let bind_address = format!("0.0.0.0:{}", port);
-    let listener = tokio::net::TcpListener::bind(&bind_address).await?;
-
-    // Start the web server in the background
-    let server_handle = tokio::spawn(async move {
-        if let Err(e) = axum::serve(listener, router).await {
-            eprintln!("Server error: {}", e);
-        }
-    });
-
-    println!(
-        "XRPC Hello World service started on http://0.0.0.0:{}",
-        port
-    );
-
-    // Keep the server running
-    server_handle.await.unwrap();
-
-    Ok(())
-}
-
-async fn handle_index() -> Html<&'static str> {
-    Html("<html><body><h1>Right place wrong protocol...</h1></body></html>")
-}
-
-// /.well-known/did.json
-async fn handle_wellknown_did_web(
-    service_document: State<ServiceDocument>,
-) -> Json<serde_json::Value> {
-    Json(service_document.0 .0)
-}
-
-// /.well-known/atproto-did
-async fn handle_wellknown_atproto_did(service_did: State<ServiceDID>) -> Response {
-    (StatusCode::OK, service_did.0 .0).into_response()
-}
-
-// /xrpc/garden.lexicon.ngerakines.helloworld.Hello
-async fn handle_get_feed_skeleton(
-    parameters: Query<FeedParameters>,
-    headers: HeaderMap,
-    authorization: Option<ResolvingAuthorization>,
-) -> Json<serde_json::Value> {
-    println!("headers {headers:?}");
-    let subject = parameters.feed.as_str();
-    let message = if let Some(auth) = authorization {
-        format!("Hello, authenticated {}! (caller: {})", subject, auth.3)
-    } else {
-        format!("Hello, {}!", subject)
+    let service = Service {
+        id: "".into(),
+        service_endpoint: Some("".into()),
+        r#type: "".into(),
+        extra_data: BTreeMap::default(),
     };
-    Json(json!({ "message": message }))
+
+    let did_doc: DidDocument = DidDocument {
+        id: did.clone().unwrap(),
+        also_known_as: Some(vec!["at://ott.aleeve.dev".into()]),
+        verification_method: Some(vec![verification_method]),
+        service: Some(vec![service]),
+        extra_data: BTreeMap::default(),
+    };
+
+    let resolver = JacquardResolver::new(reqwest::Client::new(), ResolverOptions::default());
+    let config: ServiceAuthConfig<JacquardResolver> =
+        ServiceAuthConfig::new(did.clone().unwrap(), resolver);
+
+    let app = Router::new()
+        .merge(GetFeedSkeletonRequest::into_router(handler))
+        .with_state(config)
+        .merge(did_web_router(did_doc));
+
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
+    axum::serve(listener, app).await.unwrap();
 }

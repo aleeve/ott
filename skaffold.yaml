@@ -86,6 +86,8 @@ deploy:
           - helm/ott/values.yaml
         setValueTemplates:
           cloudflared.token: "{{.CLOUDFLARE_TUNNEL_TOKEN}}"
+          app_auth.did: "{{.APP_AUTH_DID}}"
+          app_auth.key: "{{.APP_AUTH_KEY}}"
           postgresql.migration_image_fqn: "{{.IMAGE_FULLY_QUALIFIED_migration_pg}}"
           services.likes_connector.image.fqn: "{{.IMAGE_FULLY_QUALIFIED_likes_connector}}"
           services.posts_connector.image.fqn: "{{.IMAGE_FULLY_QUALIFIED_posts_connector}}"

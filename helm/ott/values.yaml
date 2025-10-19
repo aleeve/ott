@@ -2,9 +2,13 @@ postgresql:
   imageName: loaded-pg:17
   migration_image_fqn: migration-pg:17
 
-cloudflare:
+cloudflared:
   enabled: true
   token: {}
+
+app_auth:
+  did: {}
+  key: {}
 
 services:
   likes_connector:
@@ -52,3 +56,13 @@ services:
     env:
     - name: EXTERNAL_BASE
       value: localhost 
+    - name: APP_DID
+      valueFrom:
+        secretKeyRef:
+          name: app-auth
+          key: did
+    - name: APP_KEY
+      valueFrom:
+        secretKeyRef:
+          name: app-auth
+          key: KEY

@@ -11,6 +11,8 @@ use serde_json::json;
 use std::ops::Deref;
 use std::{collections::HashMap, num::NonZeroUsize, sync::Arc};
 
+use jacquard_axum::{ExtractXrpc, IntoRouter};
+
 use atproto_identity::{resolve::IdentityResolver, storage::DidDocumentStorage};
 use axum::extract::FromRef;
 
