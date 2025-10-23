@@ -21,6 +21,8 @@ use serde_json::Value;
 use tracing::info;
 use tracing_subscriber::EnvFilter;
 
+use tower_http::normalize_path::NormalizePathLayer;
+
 async fn handle_wellknown_atproto_did() -> Json<serde_json::Value> {
     Json::from(Value::from("did:web:ott.aleeve.dev"))
 }
@@ -68,7 +70,7 @@ async fn main() {
 
     let service = Service {
         id: "#bsky_fg".into(),
-        service_endpoint: Some("https://ott.aleeve.dev/".into()),
+        service_endpoint: Some("https://ott.aleeve.dev".into()),
         r#type: "BskyFeedGenerator".into(),
         extra_data: BTreeMap::default(),
     };
@@ -92,7 +94,8 @@ async fn main() {
         .route(
             "/.well-known/atproto-did",
             get(handle_wellknown_atproto_did),
-        );
+        )
+        .layer(NormalizePathLayer::trim_trailing_slash());
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:8080").await.unwrap();
     info!("Starting service");
